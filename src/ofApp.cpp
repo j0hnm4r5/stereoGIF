@@ -3,36 +3,58 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 
-	ofSetFrameRate(5);
-
-
-	i = 0;
+	ofSetFrameRate(10);
+	ofSetCircleResolution(100);
 	
-	bgTile.loadImage("paper.jpg");
+	bgTile.loadImage("soil.jpg");
 	bgTile.resize(128, 128);
 	
-//	depthMap.loadImage("shark.png");
-//	depthMap.setImageType(OF_IMAGE_GRAYSCALE);
-	
-	gifLoader.load("kinect.gif");
-	
 	// allocate images
-	depthMap.allocate(gifLoader.pages[0].getWidth(), gifLoader.pages[0].getHeight(), OF_IMAGE_GRAYSCALE);
+	depthMap.allocate(ofGetWidth(), ofGetHeight(), OF_IMAGE_GRAYSCALE);
+	fbo.allocate(ofGetWidth(), ofGetHeight(), GL_RGBA);
+	fbo.begin();
+		ofClear(255, 255, 255, 0);
+	fbo.end();
+	
 	magicEye.allocate(depthMap.getWidth() + bgTile.getWidth(), depthMap.getHeight(), OF_IMAGE_COLOR);
 	
 	ofSetWindowShape(magicEye.width, magicEye.height + bgTile.getWidth());
-	
-	gifSaver.create("output.gif");
 
+	nBalls = 6;
+	myBall = new ofBall*[nBalls];
+		for (int i = 0; i < nBalls; i++){
+			float x = ofRandom(0, ofGetWidth() - 100);
+			float y = ofRandom(0, ofGetHeight());
+			int dim = 250 - (50 + i * 25);
+			int c = 100 + i * 31;
+
+			myBall[i] = new ofBall(x, y, dim, c, c, c);
+
+	}
+	
+	i = 0;
 
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
+
+	for (int i = 0; i < nBalls; i++) {
+		myBall[i]->update();
+	}
 	
-	depthMap.setFromPixels(gifLoader.pages[i % 9]);
+	fbo.begin();
+	ofClear(0, 0, 0, 0);
+	for (int i = 0; i < nBalls; i++) {
+		myBall[i]->draw();
+	}
+	fbo.end();
+	
+	ofPixels pix;
+	fbo.readToPixels(pix);
+	depthMap.setFromPixels(pix);
 	depthMap.setImageType(OF_IMAGE_GRAYSCALE);
-	
+
 	i++;
 	
 }
@@ -42,23 +64,19 @@ void ofApp::draw(){
 
 	ofBackground(0);
 
-	float depthMultiplier = .2;
+	float depthMultiplier = .4;
 	ofxAutostereogram::makeAutostereogram(bgTile, depthMap, depthMultiplier, magicEye);
 
 	magicEye.update();
 	magicEye.draw(0, 0, ofGetWidth(), ofGetHeight());
 	
-	if (i < 10) {
+
+	if (i <= 10) {
 		ofImage img;
 		img.grabScreen(0, 0, ofGetWidth(), ofGetHeight());
-		gifSaver.append(img.getPixelsRef());
-	}
-	
-	if (i == 10) {
-		gifSaver.save();
-		ofLog() << "SAVED";
-	}
+		img.saveImage("output/output" + ofToString(i - 1) + ".png");
 
+	}
 
 }
 

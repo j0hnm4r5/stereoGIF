@@ -2,7 +2,7 @@
 
 #include "ofMain.h"
 #include "ofxAutostereogram.h"
-#include "ofxGif.h"
+#include "ofBall.h"
 
 class ofApp : public ofBaseApp{
 
@@ -18,9 +18,10 @@ class ofApp : public ofBaseApp{
 	
 		ofImage bgTile, depthMap, magicEye;
 	
-		ofxGIF::fiGifLoader gifLoader;
-		ofxGIF::fiGifSaver gifSaver;
+		ofBall** myBall;  
+		int nBalls;
+	
+		ofFbo fbo;
 	
 		int i;
-	
 };
